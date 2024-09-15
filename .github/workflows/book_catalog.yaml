@@ -1,69 +1,76 @@
-# 
-# GitHub Actions workflow.
-#
-# Automatically deploys the Node.js microservice to Kubernetes on push to the main branch.
-# For real use you might want to restrict this to the "prod" branch.
-#
-
-name: Deploy book_catalog
+name: Setup Infrastructure and Deploy
 
 on:
-  #
-  # Deploys the microservice on push to the specified subdirectory in the main branch of this code repository.
-  #
   push: 
     branches:
       - main
     paths:
       - book_catalog/**
-
-  #
-  # Allows deployment to be invoked manually through the GitHub Actions user interface.
-  #
-  workflow_dispatch: 
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'bmok1'
+        required: true
+      kubernetes_version:
+        description: 'Kubernetes Version'
+        required: true
+        default: '1.26.3'
 
 jobs:
-
-  deploy:
+  setup_and_deploy:
     runs-on: ubuntu-latest
-    
-    env:
-      VERSION: ${{ github.sha }}
-      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
-      REGISTRY_UN: ${{ secrets.REGISTRY_UN }}
-      REGISTRY_PW: ${{ secrets.REGISTRY_PW  }}
-      NAME: video-upload
-      DIRECTORY: video-upload
 
     steps:
-      
-      # Checks-out your repository under $GITHUB_WORKSPACE.
       - uses: actions/checkout@v3
 
-      #
-      # Builds the Docker image.
-      #
+      # Authenticate with Azure using az login
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # We will set this secret in GitHub
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.5.6
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./scripts/terraform
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan -var="app_name=${{ github.event.inputs.app_name || 'default-app-name' }}" -var="kubernetes_version=${{ github.event.inputs.kubernetes_version || '1.26.3' }}"
+        working-directory: ./scripts/terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./scripts/terraform
+
+      - name: Get Azure Resources Info
+        id: azure_info
+        run: |
+          APP_NAME="${{ github.event.inputs.app_name || 'default-app-name' }}"
+          echo "CONTAINER_REGISTRY=$(az acr show --name $APP_NAME --query loginServer -o tsv)" >> $GITHUB_OUTPUT
+          echo "REGISTRY_UN=$(az acr credential show --name $APP_NAME --query username -o tsv)" >> $GITHUB_OUTPUT
+          echo "REGISTRY_PW=$(az acr credential show --name $APP_NAME --query "passwords[0].value" -o tsv)" >> $GITHUB_OUTPUT
+          echo "KUBE_CONFIG=$(az aks get-credentials --resource-group $APP_NAME --name $APP_NAME -f - | base64 -w0)" >> $GITHUB_OUTPUT
+
       - name: Build
+        env:
+          CONTAINER_REGISTRY: ${{ steps.azure_info.outputs.CONTAINER_REGISTRY }}
         run: ./scripts/build-image.sh
 
-      #
-      # Publishes the Docker image to the container registry.
-      #
       - name: Publish
+        env:
+          CONTAINER_REGISTRY: ${{ steps.azure_info.outputs.CONTAINER_REGISTRY }}
+          REGISTRY_UN: ${{ steps.azure_info.outputs.REGISTRY_UN }}
+          REGISTRY_PW: ${{ steps.azure_info.outputs.REGISTRY_PW }}
         run: ./scripts/push-image.sh
 
-      #
-      # Installs Kubectl and connects it to the cluster.
-      #
-      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
-      #
       - uses: tale/kubectl-action@v1
         with:
-          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+          base64-kube-config: ${{ steps.azure_info.outputs.KUBE_CONFIG }}
           kubectl-version: v1.24.2
       
-      #
-      # Expands the configuration template and deploys the microservice.
-      #
       - name: Deploy
         run: ./scripts/deploy.sh
