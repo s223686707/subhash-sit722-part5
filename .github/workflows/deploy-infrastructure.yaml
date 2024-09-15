@@ -1,5 +1,4 @@
-# GitHub Actions workflow for deploying Terraform infrastructure.
-
+# GitHub Actions workflow to deploy Terraform infrastructure.
 name: Deploy Infrastructure
 
 on:
@@ -7,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/deploy-infrastructure.yaml
+      - .scripts/terraform/**
 
   workflow_dispatch:
 
@@ -26,47 +25,15 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-
-      - name: Create Terraform Configuration
-        run: |
-          echo 'provider "azurerm" {' > main.tf
-          echo '  features {}' >> main.tf
-          echo '}' >> main.tf
-          echo '' >> main.tf
-          echo 'resource "azurerm_resource_group" "bmok1" {' >> main.tf
-          echo '  name     = var.app_name' >> main.tf
-          echo '  location = var.location' >> main.tf
-          echo '}' >> main.tf
-          echo '' >> main.tf
-          echo 'resource "azurerm_kubernetes_cluster" "cluster" {' >> main.tf
-          echo '  name                = var.app_name' >> main.tf
-          echo '  location            = var.location' >> main.tf
-          echo '  resource_group_name = azurerm_resource_group.bmok1.name' >> main.tf
-          echo '  dns_prefix          = var.app_name' >> main.tf
-          echo '  kubernetes_version  = var.kubernetes_version' >> main.tf
-          echo '  default_node_pool {' >> main.tf
-          echo '    name            = "default"' >> main.tf
-          echo '    node_count      = 1' >> main.tf
-          echo '    vm_size         = "Standard_D2s_v3"' >> main.tf
-          echo '  }' >> main.tf
-          echo '  identity {' >> main.tf
-          echo '    type = "SystemAssigned"' >> main.tf
-          echo '  }' >> main.tf
-          echo '}' >> main.tf
-          echo '' >> main.tf
-          echo 'resource "azurerm_container_registry" "container_registry" {' >> main.tf
-          echo '  name                = var.app_name' >> main.tf
-          echo '  resource_group_name = azurerm_resource_group.bmok1.name' >> main.tf
-          echo '  location            = var.location' >> main.tf
-          echo '  admin_enabled       = true' >> main.tf
-          echo '  sku                 = "Basic"' >> main.tf
-          echo '}' >> main.tf
+        working-directory: .scripts/terraform
 
       - name: Terraform Plan
         run: terraform plan
+        working-directory: .scripts/terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        working-directory: .scripts/terraform
         env:
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
