@@ -1,4 +1,3 @@
-# GitHub Actions workflow to deploy Terraform infrastructure.
 name: Deploy Infrastructure
 
 on:
@@ -28,11 +27,15 @@ jobs:
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan \
+          -var="app_name=${{ secrets.APP_NAME }}" \
+          -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}"
         working-directory: scripts/terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve \
+          -var="app_name=${{ secrets.APP_NAME }}" \
+          -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}"
         working-directory: scripts/terraform
         env:
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
