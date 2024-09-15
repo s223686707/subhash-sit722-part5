@@ -1,1 +1,26 @@
 # Your Solution
+# Your Solution
+version: '3'
+
+services:
+  book_catalog:
+    image: book_catalog
+    build:
+      context: ./book_catalog
+      dockerfile: Dockerfile
+    container_name: book_catalog
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://db_tmlg_user:L7FvyHuXxgVfBCt6JA2tzyALjYL2Wdbx@dpg-crh1rkg8fa8c738r39o0-a.oregon-postgres.render.com/db_tmlg
+
+  inventory_management:
+    image: inventory_management
+    build:
+      context: ./inventory_management
+      dockerfile: Dockerfile
+    container_name: inventory_management  
+    ports:
+      - "9000:9000"
+    environment:
+      DATABASE_URL: postgresql://db_tmlg_user:L7FvyHuXxgVfBCt6JA2tzyALjYL2Wdbx@dpg-crh1rkg8fa8c738r39o0-a.oregon-postgres.render.com/db_tmlg
