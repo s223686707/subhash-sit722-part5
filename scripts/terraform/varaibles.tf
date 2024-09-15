@@ -18,18 +18,3 @@ variable "tenant_id" {
   type        = string
   description = "The tenant ID for the Azure account"
 }
-
-variable "app_name" {
-  type        = string
-  description = "The name of the application"
-}
-
-variable "location" {
-  default     = "australiasoutheast"
-  description = "The Azure region where the resources will be created"
-}
-
-variable "kubernetes_version" {
-  type        = string
-  description = "The version of Kubernetes to use"
-}
