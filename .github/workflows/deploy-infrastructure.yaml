@@ -27,16 +27,10 @@ jobs:
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: terraform plan \
-          -var="app_name=${{ secrets.APP_NAME }}" \
-          -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}"
-        working-directory: scripts/terraform
+        run: terraform plan -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}" -chdir=scripts/terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve \
-          -var="app_name=${{ secrets.APP_NAME }}" \
-          -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}"
-        working-directory: scripts/terraform
+        run: terraform apply -auto-approve -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}" -chdir=scripts/terraform
         env:
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}

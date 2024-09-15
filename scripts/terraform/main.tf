@@ -3,7 +3,7 @@ provider "azurerm" {
   features {}
 }
 
-# Sets global variables for this Terraform projects.
+# Sets global variables for this Terraform project.
 variable "app_name" {
   description = "The name of the application"
 }
