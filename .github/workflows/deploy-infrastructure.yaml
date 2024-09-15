@@ -27,13 +27,9 @@ jobs:
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: terraform plan -var="app_name=${{ secrets.APP_NAME }}" \
-                             -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}" \
-                             -var="subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" \
-                             -var="client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" \
-                             -var="client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" \
-                             -var="tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}"
+        run: terraform plan -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=${{ secrets.KUBERNETES_VERSION }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
         working-directory: scripts/terraform
+
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="app_name=${{ secrets.APP_NAME }}" \

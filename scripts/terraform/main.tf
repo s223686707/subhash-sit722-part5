@@ -7,7 +7,7 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Sets global variables for this Terraform project.
+# Sets global variables for this Terraform projects.
 variable "app_name" {
   description = "The name of the application"
 }
