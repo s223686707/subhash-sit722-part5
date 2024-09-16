@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-management-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-management
+  template:
+    metadata:
+      labels:
+        app: inventory-management
+    spec:
+      containers:
+      - name: inventory-management
+        image: $CONTAINER_REGISTRY/inventory_management:$VERSION
+        ports:
+        - containerPort: 9000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://part5_v4ll_user:NfycylKYmM9CvpUn9QKkeSX7eXpXVnw0@dpg-crjnegdds78s73eccul0-a.oregon-postgres.render.com/part5_v4ll"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-management-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: inventory-management
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000

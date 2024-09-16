@@ -15,5 +15,5 @@ ENV PYTHONPATH=/app/book_catalog
 # Expose port 8000
 EXPOSE 8000
 
-# Run the FastAPI app with uvicorn
+# Run the FastAPI app with uvicornn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
