@@ -1,29 +1,17 @@
-# 
-# GitHub Actions workflow.
-#
-# Automatically deploys the Node.js microservice to Kubernetes on push to the main branch.
-# For real use you might want to restrict this to the "prod" branch.
-#
-
 name: Deploy book_catalog
 
 on:
-  #
-  # Deploy the microservice on push to any branch of this code repository.
-  #
+  # Trigger the workflow on push to the master branch or changes to book_catalog directory
   push: 
     branches:
       - master
     paths:
       - book_catalog/**
 
-  #
-  # Allows deployment to be invoked manually through the GitHub Actions user interface.
-  #
+  # Allows the workflow to be triggered manually
   workflow_dispatch: 
 
 jobs:
-
   deploy:
     runs-on: ubuntu-latest
     
@@ -36,34 +24,30 @@ jobs:
       DIRECTORY: book_catalog
 
     steps:
-      
-      # Checks-out your repository under $GITHUB_WORKSPACE.
+      # Checkout the code
       - uses: actions/checkout@v3
 
-      #
-      # Builds the Docker image.
-      #
-      - name: Build
+      # Set executable permissions for all necessary scripts
+      - name: Set permissions for build, push, deploy scripts
+        run: |
+          chmod +x ./scripts/build-image.sh
+          chmod +x ./scripts/push-image.sh
+          chmod +x ./scripts/deploy.sh
+
+      # Build the Docker image
+      - name: Build Docker image
         run: ./scripts/build-image.sh
 
-      #
-      # Publishes the Docker image to the container registry.
-      #
-      - name: Publish
+      # Push the Docker image to the container registry
+      - name: Publish Docker image
         run: ./scripts/push-image.sh
 
-      #
-      # Installs Kubectl and connects it to the cluster.
-      #
-      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
-      #
+      # Install Kubectl and configure it with the cluster
       - uses: tale/kubectl-action@v1
         with:
           base64-kube-config: ${{ secrets.KUBE_CONFIG }}
           kubectl-version: v1.24.2
-      
-      #
-      # Expands the configuration template and deploys the microservice.
-      #
-      - name: Deploy
+
+      # Deploy the microservice to Kubernetes
+      - name: Deploy to Kubernetes
         run: ./scripts/deploy.sh
