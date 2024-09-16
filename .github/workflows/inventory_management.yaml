@@ -1,0 +1,53 @@
+name: Deploy inventory_management
+
+on:
+  # Trigger the workflow on push to the master branch or changes to book_catalog directory
+  push: 
+    branches:
+      - master
+    paths:
+      - inventory_management/**
+
+  # Allows the workflow to be triggered manually
+  workflow_dispatch: 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      VERSION: ${{ github.sha }}
+      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
+      REGISTRY_UN: ${{ secrets.REGISTRY_UN }}
+      REGISTRY_PW: ${{ secrets.REGISTRY_PW  }}
+      NAME: inventory_management
+      DIRECTORY: inventory_management
+
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v3
+
+      # Set executable permissions for all necessary scripts
+      - name: Set permissions for build, push, deploy scripts
+        run: |
+          chmod +x ./scripts/build-image.sh
+          chmod +x ./scripts/push-image.sh
+          chmod +x ./scripts/deploy.sh
+
+      # Build the Docker image
+      - name: Build Docker image
+        run: ./scripts/build-image.sh
+
+      # Push the Docker image to the container registry
+      - name: Publish Docker image
+        run: ./scripts/push-image.sh
+
+      # Install Kubectl and configure it with the cluster
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+          kubectl-version: v1.24.2
+
+      # Deploy the microservice to Kubernetes
+      - name: Deploy to Kubernetes
+        run: ./scripts/deploy.sh

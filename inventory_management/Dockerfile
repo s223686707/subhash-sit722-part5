@@ -15,5 +15,5 @@ ENV PYTHONPATH=/app/inventory_management
 # Expose port 8000
 EXPOSE 9000
 
-# Run the FastAPI app with uvicorn
+# Run the FastAPI app with uvicornn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
