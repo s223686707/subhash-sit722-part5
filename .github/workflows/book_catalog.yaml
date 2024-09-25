@@ -76,34 +76,35 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Notify via email
-        if: always()
+      - name: Create Python script for email notification
         run: |
-          python -c '''
+          cat << EOF > send_email.py
           import smtplib
+          import os
           from email.mime.text import MIMEText
           from email.mime.multipart import MIMEMultipart
 
-          # Check if deployment was successful
-          success = "${{ job.status }}" == "success"
-          
-          # Correct f-string formatting for subject and body
+          success = os.environ.get('JOB_STATUS') == 'success'
+
           subject = f"Deployment {'Success' if success else 'Failure'}: book_catalog"
           body = f"Deployment of book_catalog {'succeeded' if success else 'failed'}!"
 
-          # Set up the email message
           message = MIMEMultipart()
-          message["From"] = "${{ secrets.EMAIL_FROM }}"
-          message["To"] = "${{ secrets.EMAIL_TO }}"
+          message["From"] = os.environ.get('EMAIL_FROM')
+          message["To"] = os.environ.get('EMAIL_TO')
           message["Subject"] = subject
           message.attach(MIMEText(body, "plain"))
 
-          # Connect to SMTP server and send email
-          with smtplib.SMTP("${{ secrets.SMTP_SERVER }}", ${{ secrets.SMTP_PORT }}) as server:
+          with smtplib.SMTP(os.environ.get('SMTP_SERVER'), int(os.environ.get('SMTP_PORT'))) as server:
               server.starttls()
-              server.login("${{ secrets.SMTP_USER }}", "${{ secrets.SMTP_PASSWORD }}")
+              server.login(os.environ.get('SMTP_USER'), os.environ.get('SMTP_PASSWORD'))
               server.send_message(message)
 
           print("Email notification sent")
-          '''
+          EOF
 
+      - name: Notify via email
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: python send_email.py
