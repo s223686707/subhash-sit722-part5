@@ -81,30 +81,47 @@ jobs:
           cat << EOF > send_email.py
           import smtplib
           import os
+          import sys
           from email.mime.text import MIMEText
           from email.mime.multipart import MIMEMultipart
 
-          success = os.environ.get('JOB_STATUS') == 'success'
+          def send_email():
+              try:
+                  success = os.environ.get('JOB_STATUS') == 'success'
 
-          subject = f"Deployment {'Success' if success else 'Failure'}: book_catalog"
-          body = f"Deployment of book_catalog {'succeeded' if success else 'failed'}!"
+                  subject = f"Deployment {'Success' if success else 'Failure'}: book_catalog"
+                  body = f"Deployment of book_catalog {'succeeded' if success else 'failed'}!"
 
-          message = MIMEMultipart()
-          message["From"] = os.environ.get('EMAIL_FROM')
-          message["To"] = os.environ.get('EMAIL_TO')
-          message["Subject"] = subject
-          message.attach(MIMEText(body, "plain"))
+                  message = MIMEMultipart()
+                  message["From"] = os.environ.get('EMAIL_FROM')
+                  message["To"] = os.environ.get('EMAIL_TO')
+                  message["Subject"] = subject
+                  message.attach(MIMEText(body, "plain"))
 
-          with smtplib.SMTP(os.environ.get('SMTP_SERVER'), int(os.environ.get('SMTP_PORT'))) as server:
-              server.starttls()
-              server.login(os.environ.get('SMTP_USER'), os.environ.get('SMTP_PASSWORD'))
-              server.send_message(message)
+                  print(f"Connecting to SMTP server: {os.environ.get('SMTP_SERVER')}:{os.environ.get('SMTP_PORT')}")
+                  with smtplib.SMTP(os.environ.get('SMTP_SERVER'), int(os.environ.get('SMTP_PORT'))) as server:
+                      print("Connected to SMTP server")
+                      server.starttls()
+                      print("Started TLS")
+                      server.login(os.environ.get('SMTP_USER'), os.environ.get('SMTP_PASSWORD'))
+                      print("Logged in")
+                      server.send_message(message)
+                      print("Email sent")
 
-          print("Email notification sent")
+                  print("Email notification sent successfully")
+              except Exception as e:
+                  print(f"Error sending email: {str(e)}", file=sys.stderr)
+                  sys.exit(1)
+
+          if __name__ == "__main__":
+              send_email()
           EOF
 
       - name: Notify via email
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
-        run: python send_email.py
+        run: |
+          python -c "import smtplib; print(smtplib.SMTP_SSL_PORT)"
+          python -c "import ssl; print(ssl.OPENSSL_VERSION)"
+          python send_email.py
