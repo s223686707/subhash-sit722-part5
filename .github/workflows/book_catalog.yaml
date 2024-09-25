@@ -47,6 +47,12 @@ jobs:
       REGISTRY_PW: ${{ secrets.REGISTRY_PW  }}
       NAME: book_catalog
       DIRECTORY: book_catalog
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}  # Recipient email address
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}  # Sender email address
+      SMTP_SERVER: ${{ secrets.SMTP_SERVER }}  # SMTP server
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}  # SMTP port
+      SMTP_USER: ${{ secrets.SMTP_USER }}  # SMTP username
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}  # SMTP password
 
     steps:
       # Checkout the code
@@ -76,3 +82,15 @@ jobs:
       # Deploy the microservice to Kubernetes
       - name: Deploy to Kubernetes
         run: ./scripts/deploy.sh
+
+      # Notify via email on successful deployment
+      - name: Notify via email of successful deployment
+        if: success()  # Only notify if the job was successful
+        run: |
+          echo "Deployment of book_catalog succeeded!" | mail -s "Deployment Success: book_catalog" -a "From: $EMAIL_FROM" -S smtp="$SMTP_SERVER:$SMTP_PORT" -S smtp-auth=login -S smtp-auth-user="$SMTP_USER" -S smtp-auth-password="$SMTP_PASSWORD" "$EMAIL_TO"
+
+      # Notify via email on failure
+      - name: Notify via email of failure
+        if: failure()  # Notify if the job failed
+        run: |
+          echo "Deployment of book_catalog failed!" | mail -s "Deployment Failure: book_catalog" -a "From: $EMAIL_FROM" -S smtp="$SMTP_SERVER:$SMTP_PORT" -S smtp-auth=login -S smtp-auth-user="$SMTP_USER" -S smtp-auth-password="$SMTP_PASSWORD" "$EMAIL_TO"
