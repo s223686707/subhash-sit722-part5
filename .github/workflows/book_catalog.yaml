@@ -86,8 +86,8 @@ jobs:
 
           success = "${{ job.status }}" == "success"
           
-          subject = f'Deployment {"Success" if success else "Failure"}: book_catalog'
-          body = f'Deployment of book_catalog {"succeeded" if success else "failed"}!'
+          subject = f'Deployment {{"Success" if success else "Failure"}}: book_catalog'
+          body = f'Deployment of book_catalog {{"succeeded" if success else "failed"}}!'
 
           message = MIMEMultipart()
           message["From"] = "${{ secrets.EMAIL_FROM }}"
