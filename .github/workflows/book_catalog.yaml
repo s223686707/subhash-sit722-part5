@@ -41,12 +41,12 @@ jobs:
       REGISTRY_PW: ${{ secrets.REGISTRY_PW }}
       NAME: book_catalog
       DIRECTORY: book_catalog
-      EMAIL_TO: ${{ secrets.EMAIL_TO }}  # Recipient email address
-      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}  # Sender email address
-      SMTP_SERVER: ${{ secrets.SMTP_SERVER }}  # Your SMTP server
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}  # SMTP server port
-      SMTP_USER: ${{ secrets.SMTP_USER }}  # SMTP username
-      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}  # SMTP password
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v3
@@ -71,30 +71,33 @@ jobs:
       - name: Deploy to Kubernetes
         run: ./scripts/deploy.sh
 
-      # Notify via email on successful deployment
-      - name: Notify via email of successful deployment
-        if: success()
-        run: |
-          sudo apt-get install swaks -y  # Install swaks
-          swaks --to $EMAIL_TO \
-                --from $EMAIL_FROM \
-                --server $SMTP_SERVER \
-                --auth-user $SMTP_USER \
-                --auth-password $SMTP_PASSWORD \
-                --port $SMTP_PORT \
-                --header "Subject: Deployment Success: book_catalog" \
-                --body "Deployment of book_catalog succeeded!"
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
 
-      # Notify via email on failure
-      - name: Notify via email of failure
-        if: failure()
+      - name: Notify via email
+        if: always()
         run: |
-          sudo apt-get install swaks -y  # Install swaks
-          swaks --to $EMAIL_TO \
-                --from $EMAIL_FROM \
-                --server $SMTP_SERVER \
-                --auth-user $SMTP_USER \
-                --auth-password $SMTP_PASSWORD \
-                --port $SMTP_PORT \
-                --header "Subject: Deployment Failure: book_catalog" \
-                --body "Deployment of book_catalog failed!"
+          python -c "
+          import smtplib
+          from email.mime.text import MIMEText
+          from email.mime.multipart import MIMEMultipart
+
+          success = '${{ job.status }}' == 'success'
+          
+          subject = f'Deployment {'Success' if success else 'Failure'}: book_catalog'
+          body = f'Deployment of book_catalog {'succeeded' if success else 'failed'}!'
+
+          message = MIMEMultipart()
+          message['From'] = '${{ secrets.EMAIL_FROM }}'
+          message['To'] = '${{ secrets.EMAIL_TO }}'
+          message['Subject'] = subject
+          message.attach(MIMEText(body, 'plain'))
+
+          with smtplib.SMTP('${{ secrets.SMTP_SERVER }}', ${{ secrets.SMTP_PORT }}) as server:
+              server.starttls()
+              server.login('${{ secrets.SMTP_USER }}', '${{ secrets.SMTP_PASSWORD }}')
+              server.send_message(message)
+          print('Email notification sent')
+          "
