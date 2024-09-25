@@ -43,8 +43,8 @@ jobs:
       DIRECTORY: book_catalog
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-      SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_SERVER: smtp.gmail.com  # Ensure this is the correct server for Gmail
+      SMTP_PORT: 587                # Use 587 for TLS
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
@@ -71,7 +71,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: ./scripts/deploy.sh
 
-      - name: Set up Python
+      - name: Set up Python for email notification
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
@@ -101,7 +101,7 @@ jobs:
                   print(f"Connecting to SMTP server: {os.environ.get('SMTP_SERVER')}:{os.environ.get('SMTP_PORT')}")
                   with smtplib.SMTP(os.environ.get('SMTP_SERVER'), int(os.environ.get('SMTP_PORT'))) as server:
                       print("Connected to SMTP server")
-                      server.starttls()
+                      server.starttls()  # Upgrade the connection to TLS
                       print("Started TLS")
                       server.login(os.environ.get('SMTP_USER'), os.environ.get('SMTP_PASSWORD'))
                       print("Logged in")
@@ -121,7 +121,4 @@ jobs:
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
-        run: |
-          python -c "import smtplib; print(smtplib.SMTP_SSL_PORT)"
-          python -c "import ssl; print(ssl.OPENSSL_VERSION)"
-          python send_email.py
+        run: python send_email.py
