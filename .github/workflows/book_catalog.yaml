@@ -84,20 +84,26 @@ jobs:
           from email.mime.text import MIMEText
           from email.mime.multipart import MIMEMultipart
 
+          # Check if deployment was successful
           success = "${{ job.status }}" == "success"
           
-          subject = f'Deployment {{"Success" if success else "Failure"}}: book_catalog'
-          body = f'Deployment of book_catalog {{"succeeded" if success else "failed"}}!'
+          # Correct f-string formatting for subject and body
+          subject = f"Deployment {'Success' if success else 'Failure'}: book_catalog"
+          body = f"Deployment of book_catalog {'succeeded' if success else 'failed'}!"
 
+          # Set up the email message
           message = MIMEMultipart()
           message["From"] = "${{ secrets.EMAIL_FROM }}"
           message["To"] = "${{ secrets.EMAIL_TO }}"
           message["Subject"] = subject
           message.attach(MIMEText(body, "plain"))
 
+          # Connect to SMTP server and send email
           with smtplib.SMTP("${{ secrets.SMTP_SERVER }}", ${{ secrets.SMTP_PORT }}) as server:
               server.starttls()
               server.login("${{ secrets.SMTP_USER }}", "${{ secrets.SMTP_PASSWORD }}")
               server.send_message(message)
+
           print("Email notification sent")
           '''
+
