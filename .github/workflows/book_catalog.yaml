@@ -34,7 +34,7 @@ jobs:
       # Run tests
       - name: Run tests
         run: |
-          pytest -v -s tests/test_main.py  # Adjust the path to your test files as necessary
+          pytest -v -s book_catalog/tests/test_main.py  # Adjust the path to your test files as necessary
 
   deploy:
     runs-on: ubuntu-latest
