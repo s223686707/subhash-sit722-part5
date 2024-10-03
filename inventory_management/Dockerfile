@@ -9,7 +9,7 @@ COPY . .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set the Python path to include the book_catalog directoryy
+# Set the Python path to include the book_catalog directory
 ENV PYTHONPATH=/app/inventory_management
 
 # Expose port 8000
