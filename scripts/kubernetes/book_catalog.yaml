@@ -20,7 +20,7 @@ spec:
         - containerPort: 8000
         env:
         - name: DATABASE_URL
-          value: "postgresql://db_y63t_user:r8j9Be5AngN5dO1BtVVBdJQ3ULM6u82O@dpg-crpsafjtq21c73d7bkmg-a.oregon-postgres.render.com/db_y63t"
+          value: "postgresql://test_qvyg_user:BxUvRQ6bGxUyn5isMjxdMivC239aNyjj@dpg-crv60atds78s73a91or0-a.oregon-postgres.render.com/test_qvyg"
 ---
 apiVersion: v1
 kind: Service
