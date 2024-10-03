@@ -12,7 +12,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://db_tmlg_user:L7FvyHuXxgVfBCt6JA2tzyALjYL2Wdbx@dpg-crh1rkg8fa8c738r39o0-a.oregon-postgres.render.com/db_tmlg
+      DATABASE_URL: postgresql://test_qvyg_user:BxUvRQ6bGxUyn5isMjxdMivC239aNyjj@dpg-crv60atds78s73a91or0-a.oregon-postgres.render.com/test_qvyg
 
   inventory_management:
     image: inventory_management
@@ -23,4 +23,4 @@ services:
     ports:
       - "9000:9000"
     environment:
-      DATABASE_URL: postgresql://db_tmlg_user:L7FvyHuXxgVfBCt6JA2tzyALjYL2Wdbx@dpg-crh1rkg8fa8c738r39o0-a.oregon-postgres.render.com/db_tmlg
+      DATABASE_URL: postgresql://test_qvyg_user:BxUvRQ6bGxUyn5isMjxdMivC239aNyjj@dpg-crv60atds78s73a91or0-a.oregon-postgres.render.com/test_qvyg
